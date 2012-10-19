@@ -41,7 +41,7 @@ class NowCommand(object):
         event = " ".join(args)
         event = hash_parse(event)
         print format_tags(event)
-        print run(['google', 'calendar', 'add', '-d', no_length, event])
+        print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
 
 
 class ForCommand(object):
@@ -54,7 +54,7 @@ class ForCommand(object):
         length = "%s,%s" % (now, later)
         event = " ".join(args[1:])
         event = hash_parse(event)
-        print run(['google', 'calendar', 'add', '-d', length, event])
+        print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
 
 
 class QuickCommand(object):
@@ -65,7 +65,7 @@ class QuickCommand(object):
             event = " ".join(args)
             event = hash_parse(event)
             print format_tags(event)
-            print run(['google', 'calendar', 'add', event])
+            print run(['google', 'calendar', 'add', event], with_stderr=True)
 
 
 class TodayCommand(object):
