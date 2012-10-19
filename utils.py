@@ -11,13 +11,16 @@ def say(string):
     sys.stdout.flush()
 
 
-def run(comm):
+def run(comm, with_stderr=False):
     proc = subprocess.Popen(comm,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
     output = proc.communicate()
-    # Concat stdout & stderr, because we don't care
-    return output[0]
+    if with_stderr:
+        # Concat stdout & stderr, because we don't care
+        return output[0] + "\n" + output[1]
+    else:
+        return output[0]
 
 
 def hash_parse(ev_str):

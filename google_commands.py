@@ -40,6 +40,7 @@ class NowCommand(object):
         no_length = "%s,%s" % (now, now)
         event = " ".join(args)
         event = hash_parse(event)
+        print format_tags(event)
         print run(['google', 'calendar', 'add', '-d', no_length, event])
 
 
