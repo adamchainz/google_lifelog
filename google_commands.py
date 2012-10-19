@@ -1,4 +1,5 @@
 # coding=utf-8
+from datetime import datetime
 from config import config
 from utils import *
 
@@ -32,24 +33,26 @@ def google_cal_format(cal_str):
 
 class NowCommand(object):
     def run(self, args):
-        if len(args) != 1:
+        if len(args) == 0:
             print fail("Usage: add \"Thinking\""), "- adds a 0-minute event right now"
             return
         now = date_format(datetime.now())
         no_length = "%s,%s" % (now, now)
-        event = hash_parse(args[0])
+        event = " ".join(args)
+        event = hash_parse(event)
         print run(['google', 'calendar', 'add', '-d', no_length, event])
 
 
 class ForCommand(object):
     def run(self, args):
-        if len(args) != 2:
+        if len(args) < 2:
             print fail("Usage: for 10 \"Drinking\""), "- adds a 10 minute event right now"
             return
         now = date_format(datetime.now())
         later = date_format(datetime.now() + timedelta(minutes=int(args[0])))
         length = "%s,%s" % (now, later)
-        event = hash_parse(args[1])
+        event = " ".join(args[1:])
+        event = hash_parse(event)
         print run(['google', 'calendar', 'add', '-d', length, event])
 
 
@@ -60,7 +63,7 @@ class QuickCommand(object):
         else:
             event = " ".join(args)
             event = hash_parse(event)
-            print event
+            print format_tags(event)
             print run(['google', 'calendar', 'add', event])
 
 
