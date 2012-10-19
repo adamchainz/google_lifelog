@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from utils import *
 
 commands = {}
-for module in ['google_commands']:
+for module in ['google_commands', 'local_commands']:
     mod = __import__(module)
     for d in dir(mod):
         obj = getattr(mod, d)

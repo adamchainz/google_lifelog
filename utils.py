@@ -3,10 +3,11 @@ import re
 import sys
 import subprocess
 from terminal_colours import *
+from django.utils.encoding import smart_str
 
 
-def say(str):
-    sys.stdout.write(str)
+def say(string):
+    sys.stdout.write(smart_str(string))
     sys.stdout.flush()
 
 
@@ -16,7 +17,7 @@ def run(comm):
                             stderr=subprocess.PIPE)
     output = proc.communicate()
     # Concat stdout & stderr, because we don't care
-    return output[0] + "\n" + output[1]
+    return output[0]
 
 
 def hash_parse(ev_str):
@@ -24,23 +25,11 @@ def hash_parse(ev_str):
     return ev_str.replace('--', '#')
 
 
-def cal_format(cal_str):
-
-    # Highlight hashtags
+def format_tags(str):
     def tag_highlight(match):
         return header(match.group(0))
 
-    cal_str = re.sub(r'\#\w+\b',
-                    tag_highlight,
-                    cal_str,
-                    flags=re.MULTILINE)
-
-    # Highlight event times
-    def event_highlight(match):
-        return okblue(match.group(2)) + "\t" + match.group(1)
-    cal_str = re.sub(r'^(.+),([^,\n]+)$',
-                    event_highlight,
-                    cal_str,
-                    flags=re.MULTILINE)
-
-    return cal_str
+    return re.sub(r'\#\w+\b',
+                  tag_highlight,
+                  str,
+                  flags=re.MULTILINE)

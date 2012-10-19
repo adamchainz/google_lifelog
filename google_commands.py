@@ -11,14 +11,23 @@ def date_format(datetime):
 
 
 def google_cal_format(cal_str):
-
     # Remove header
     cal_str = re.sub(r'^\[.*\]$',
                      '',
                      cal_str,
                      flags=re.MULTILINE)
 
-    return cal_format(cal_str)
+    cal_str = format_tags(cal_str)
+
+    # Highlight event times
+    def event_highlight(match):
+        return okblue(match.group(2)) + "\t" + match.group(1)
+    cal_str = re.sub(r'^(.+),([^,\n]+)$',
+                    event_highlight,
+                    cal_str,
+                    flags=re.MULTILINE)
+
+    return cal_str
 
 
 class NowCommand(object):
@@ -46,10 +55,11 @@ class ForCommand(object):
 
 class QuickCommand(object):
     def run(self, args):
-        if len(args) != 1:
+        if len(args) == 0:
             print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
         else:
-            event = hash_parse(args[0])
+            event = " ".join(args)
+            event = hash_parse(event)
             print event
             print run(['google', 'calendar', 'add', event])
 
