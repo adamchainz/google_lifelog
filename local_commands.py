@@ -15,9 +15,6 @@ def get_events(filter_re=None):
     filename = config.get('Local', 'ical_filename')
     cal = Calendar.from_ical(open(filename, 'rb').read())
 
-    if filter_re:
-        filter_re = hash_parse(filter_re)
-
     # Search
     event_list = []
     for ting in cal.walk():

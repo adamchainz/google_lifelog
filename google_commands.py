@@ -39,7 +39,6 @@ class NowCommand(object):
         now = date_format(datetime.now())
         no_length = "%s,%s" % (now, now)
         event = " ".join(args)
-        event = hash_parse(event)
         print format_tags(event)
         print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
 
@@ -51,9 +50,10 @@ class ForCommand(object):
             return
         now = date_format(datetime.now())
         later = date_format(datetime.now() + timedelta(minutes=int(args[0])))
+        if later < now:
+            (now, later) = (later, now)
         length = "%s,%s" % (now, later)
         event = " ".join(args[1:])
-        event = hash_parse(event)
         print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
 
 
@@ -63,7 +63,6 @@ class QuickCommand(object):
             print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
         else:
             event = " ".join(args)
-            event = hash_parse(event)
             print format_tags(event)
             print run(['google', 'calendar', 'add', event], with_stderr=True)
 

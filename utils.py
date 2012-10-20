@@ -23,11 +23,6 @@ def run(comm, with_stderr=False):
         return output[0]
 
 
-def hash_parse(ev_str):
-    # Because I can't type hash on terminal.
-    return ev_str.replace('--', '#')
-
-
 def format_tags(str):
     def tag_highlight(match):
         return header(match.group(0))
