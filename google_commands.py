@@ -31,72 +31,66 @@ def google_cal_format(cal_str):
     return cal_str
 
 
-class NowCommand(object):
-    def run(self, args):
-        if len(args) == 0:
-            print fail("Usage: add \"Thinking\""), "- adds a 0-minute event right now"
-            return
-        now = date_format(datetime.now())
-        no_length = "%s,%s" % (now, now)
+def now_command(self, args):
+    if len(args) == 0:
+        print fail("Usage: add \"Thinking\""), "- adds a 0-minute event right now"
+        return
+    now = date_format(datetime.now())
+    no_length = "%s,%s" % (now, now)
+    event = " ".join(args)
+    print format_tags(event)
+    print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
+
+
+def for_command(self, args):
+    if len(args) < 2:
+        print fail("Usage: for 10 \"Drinking\""), "- adds a 10 minute event right now"
+        return
+    now = date_format(datetime.now())
+    later = date_format(datetime.now() + timedelta(minutes=int(args[0])))
+    if later < now:
+        (now, later) = (later, now)
+    length = "%s,%s" % (now, later)
+    event = " ".join(args[1:])
+    print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
+
+
+def quick_command(self, args):
+    if len(args) == 0:
+        print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
+    else:
         event = " ".join(args)
         print format_tags(event)
-        print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
+        print run(['google', 'calendar', 'add', event], with_stderr=True)
 
 
-class ForCommand(object):
-    def run(self, args):
-        if len(args) < 2:
-            print fail("Usage: for 10 \"Drinking\""), "- adds a 10 minute event right now"
-            return
-        now = date_format(datetime.now())
-        later = date_format(datetime.now() + timedelta(minutes=int(args[0])))
-        if later < now:
-            (now, later) = (later, now)
-        length = "%s,%s" % (now, later)
-        event = " ".join(args[1:])
-        print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
+def today_command(self, args):
+    print google_cal_format(run(['google', 'calendar', 'today']))
 
 
-class QuickCommand(object):
-    def run(self, args):
-        if len(args) == 0:
-            print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
-        else:
-            event = " ".join(args)
-            print format_tags(event)
-            print run(['google', 'calendar', 'add', event], with_stderr=True)
+def yesterday_command(self, args):
+    minus_24 = datetime.now() - timedelta(hours=24)
+    yesterday = datetime.strftime(minus_24, '%Y-%m-%d')
+    print google_cal_format(run(['google', 'calendar', 'list', '-d', yesterday]))
 
 
-class TodayCommand(object):
-    def run(self, args):
-        print google_cal_format(run(['google', 'calendar', 'today']))
+def download_command(self, args):
+    if len(args) > 0:
+        print fail("I don't take any commands.")
 
+    try:
+        url = config.get('Google', 'ical_url')
+    except:
+        print fail("Couldn't find ical_url in config file")
+        return
 
-class YesterdayCommand(object):
-    def run(self, args):
-        minus_24 = datetime.now() - timedelta(hours=24)
-        yesterday = datetime.strftime(minus_24, '%Y-%m-%d')
-        print google_cal_format(run(['google', 'calendar', 'list', '-d', yesterday]))
+    try:
+        filename = config.get('Local', 'ical_filename')
+    except:
+        print fail("Couldn't find ical_filename in config file")
+        return
 
-
-class DownloadCommand(object):
-    def run(self, args):
-        if len(args) > 0:
-            print fail("I don't take any commands.")
-
-        try:
-            url = config.get('Google', 'ical_url')
-        except:
-            print fail("Couldn't find ical_url in config file")
-            return
-
-        try:
-            filename = config.get('Local', 'ical_filename')
-        except:
-            print fail("Couldn't find ical_filename in config file")
-            return
-
-        ical = run(['curl', url])
-        with open(filename, 'w') as fp:
-            fp.write(ical)
-        print "Downloaded."
+    ical = run(['curl', url])
+    with open(filename, 'w') as fp:
+        fp.write(ical)
+    print "Downloaded."
