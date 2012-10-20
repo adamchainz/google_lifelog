@@ -1,6 +1,6 @@
 # coding=utf-8
 import re
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from icalendar import Calendar  # , vDate
 from config import config
 from utils import *
@@ -68,3 +68,17 @@ class ListCommand(object):
 
         for ev in sort_events(get_events(filter_re)):
             say(format_event(ev) + "\n")
+
+
+class SumTimeCommand(object):
+    def run(self, args):
+        if len(args) > 1:
+            print fail("Only up to 1 arg : a filter_re")
+            return
+
+        filter_re = args[0] if len(args) == 1 else None
+
+        time_sum = timedelta(0)
+        for ev in sort_events(get_events(filter_re)):
+            time_sum += (ev.get('dtend').dt - ev.get('dtstart').dt)
+        print time_sum
