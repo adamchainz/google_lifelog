@@ -31,7 +31,7 @@ def google_cal_format(cal_str):
     return cal_str
 
 
-def now_command(self, args):
+def now_command(args):
     if len(args) == 0:
         print fail("Usage: add \"Thinking\""), "- adds a 0-minute event right now"
         return
@@ -42,7 +42,7 @@ def now_command(self, args):
     print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
 
 
-def for_command(self, args):
+def for_command(args):
     if len(args) < 2:
         print fail("Usage: for 10 \"Drinking\""), "- adds a 10 minute event right now"
         return
@@ -52,10 +52,11 @@ def for_command(self, args):
         (now, later) = (later, now)
     length = "%s,%s" % (now, later)
     event = " ".join(args[1:])
+    print event
     print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
 
 
-def quick_command(self, args):
+def quick_command(args):
     if len(args) == 0:
         print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
     else:
@@ -64,17 +65,17 @@ def quick_command(self, args):
         print run(['google', 'calendar', 'add', event], with_stderr=True)
 
 
-def today_command(self, args):
+def today_command(args):
     print google_cal_format(run(['google', 'calendar', 'today']))
 
 
-def yesterday_command(self, args):
+def yesterday_command(args):
     minus_24 = datetime.now() - timedelta(hours=24)
     yesterday = datetime.strftime(minus_24, '%Y-%m-%d')
     print google_cal_format(run(['google', 'calendar', 'list', '-d', yesterday]))
 
 
-def download_command(self, args):
+def download_command(args):
     if len(args) > 0:
         print fail("I don't take any commands.")
 
