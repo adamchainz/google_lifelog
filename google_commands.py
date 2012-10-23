@@ -52,7 +52,7 @@ def for_command(args):
         (now, later) = (later, now)
     length = "%s,%s" % (now, later)
     event = " ".join(args[1:])
-    print event
+    print format_tags(event)
     print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
 
 
