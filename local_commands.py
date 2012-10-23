@@ -1,10 +1,12 @@
 # coding=utf-8
 import re
+from collections import defaultdict
 from datetime import datetime, date, time, timedelta
 from icalendar import Calendar  # , vDate
 from config import config
 from utils import *
 from dateutil import zoneinfo
+from dateutil.relativedelta import *
 
 # http://icalendar.readthedocs.org/en/latest/examples.html
 
@@ -79,3 +81,51 @@ def sum_time_command(args):
     for ev in sort_events(get_events(filter_re)):
         time_sum += (ev.get('dtend').dt - ev.get('dtstart').dt)
     print time_sum
+
+
+def bucket_command(args):
+    if len(args) < 3:
+        print fail("bucket (days|weeks) (num|time|var) filter_re")
+        return
+
+    time_len = args[0]
+
+    sum_var = args[1]
+
+    filter_re = " ".join(args[2:])
+
+    events = sort_events(get_events(filter_re))
+
+    if sum_var == 'num':
+        sum_dict = defaultdict(int)
+    elif sum_var == 'time':
+        sum_dict = defaultdict(timedelta)
+    else:
+        sum_re = re.compile('\\b%s=(\\d+)\\b' % sum_var, flags=re.IGNORECASE)
+        sum_dict = defaultdict(int)
+
+    for ev in events:
+        if time_len == 'weeks':
+            day = ev.get('dtstart').dt.date()
+            key = day - relativedelta(weekday=MO)
+        elif time_len == 'days':
+            key = ev.get('dtstart').dt.date()
+
+        if sum_var == 'num':
+            val = 1
+        elif sum_var == 'time':
+            val = ev.get('dtend').dt - ev.get('dtstart').dt
+        else:
+            # var fallback
+            match = sum_re.search(str(ev.get('summary')))
+            try:
+                val = int(match.group(1))
+            except AttributeError:
+                print fail(format_event(ev) + " has no %s" % sum_var)
+                val = 0
+
+        sum_dict[key] += val
+
+    # output
+    for key in sorted(sum_dict):
+        print "%s\t%s" % (okblue(str(key)), sum_dict[key])
