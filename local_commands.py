@@ -71,11 +71,11 @@ def list_command(args):
 
 
 def sum_time_command(args):
-    if len(args) > 1:
-        print fail("Only up to 1 arg : a filter_re")
+    if len(args) < 1:
+        print fail("Only 1 arg : a filter_re")
         return
 
-    filter_re = args[0] if len(args) == 1 else None
+    filter_re = " ".join(args)
 
     time_sum = timedelta(0)
     for ev in sort_events(get_events(filter_re)):
@@ -100,6 +100,9 @@ def bucket_command(args):
         sum_dict = defaultdict(int)
     elif sum_var == 'time':
         sum_dict = defaultdict(timedelta)
+    elif sum_var == 'mg':
+        sum_re = re.compile('\\b(\\d+)mg\\b', flags=re.IGNORECASE)
+        sum_dict = defaultdict(int)
     else:
         sum_re = re.compile('\\b%s=(\\d+)\\b' % sum_var, flags=re.IGNORECASE)
         sum_dict = defaultdict(int)
@@ -109,7 +112,9 @@ def bucket_command(args):
             day = ev.get('dtstart').dt.date()
             key = day - relativedelta(weekday=MO)
         elif time_len == 'days':
-            key = ev.get('dtstart').dt.date()
+            key = ev.get('dtstart').dt.date() - relativedelta(days=0)
+
+        print format_event(ev)
 
         if sum_var == 'num':
             val = 1
@@ -127,5 +132,16 @@ def bucket_command(args):
         sum_dict[key] += val
 
     # output
-    for key in sorted(sum_dict):
-        print "%s\t%s" % (okblue(str(key)), sum_dict[key])
+    if time_len == 'weeks':
+        gap = timedelta(days=7)
+    else:
+        gap = timedelta(days=1)
+
+    last = sorted(sum_dict)[-1]
+    i = sorted(sum_dict)[0]
+    while True:
+        val = sum_dict.get(i, "")
+        print "%s\t%s" % (okblue(str(i)), val)
+        i += gap
+        if i > last:
+            break
