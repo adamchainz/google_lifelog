@@ -83,6 +83,26 @@ def sum_time_command(args):
     print time_sum
 
 
+def hash_tags_command(args):
+    if len(args) > 0:
+        print fail("No args.")
+        return
+
+    events = get_events("")
+    tags = defaultdict(int)
+
+    for ev in events:
+        hash_tags = re.findall('\#\w+', ev.get('summary'))
+        for tag in hash_tags:
+            tags[tag] += 1
+
+    tags = [(tag, tags[tag]) for tag in tags]
+    tags = sorted(tags, key=lambda x:-x[1])
+
+    for tag in tags:
+        print format_tags("%s\t%i" % (tag[0], tag[1]))
+
+
 def bucket_command(args):
     if len(args) < 3:
         print fail("bucket (days|weeks) (num|time|var) filter_re")
@@ -113,8 +133,6 @@ def bucket_command(args):
             key = day - relativedelta(weekday=MO)
         elif time_len == 'days':
             key = ev.get('dtstart').dt.date() - relativedelta(days=0)
-
-        print format_event(ev)
 
         if sum_var == 'num':
             val = 1
