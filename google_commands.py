@@ -32,12 +32,24 @@ def google_cal_format(cal_str):
 
 
 def now_command(args):
-    if len(args) == 0:
-        print fail("Usage: add \"Thinking\""), "- adds a 0-minute event right now"
-        return
-    now = date_format(datetime.now())
+    try:
+        offset = int(args[0])
+    except ValueError:
+        offset = None
+    if offset is not None:
+        if len(args) == 1:
+            print fail("Usage: now -5 \"Thinking\""), "- adds a 0-minute event 5 minutes ago"
+            return
+        now = date_format(datetime.now() + timedelta(minutes=offset))
+        event = " ".join(args[1:])
+    else:
+        if len(args) == 0:
+            print fail("Usage: now \"Thinking\""), "- adds a 0-minute event right now"
+            return
+        now = date_format(datetime.now())
+        event = " ".join(args)
+
     no_length = "%s,%s" % (now, now)
-    event = " ".join(args)
     print format_tags(event)
     print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
 
@@ -92,6 +104,9 @@ def download_command(args):
         return
 
     ical = run(['curl', url])
-    with open(filename, 'w') as fp:
-        fp.write(ical)
-    print "Downloaded."
+    if ical > "":
+        with open(filename, 'w') as fp:
+            fp.write(ical)
+        print header("Downloaded.")
+    else:
+        print fail("Failed to download.")
