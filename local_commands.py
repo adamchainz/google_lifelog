@@ -60,11 +60,11 @@ def format_event(event):
 
 
 def list_command(args):
-    if len(args) > 1:
-        print fail("Only up to 1 arg : a filter_re")
+    if len(args) == 0:
+        print fail("1 arg : a filter_re")
         return
 
-    filter_re = args[0] if len(args) == 1 else None
+    filter_re = " ".join(args)
 
     for ev in sort_events(get_events(filter_re)):
         say(format_event(ev) + "\n")
