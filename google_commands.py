@@ -110,3 +110,25 @@ def download_command(args):
         print header("Downloaded.")
     else:
         print fail("Failed to download.")
+
+
+def popup_command(args):
+    if len(args) < 2:
+        print fail("Usage : l popup \"defaultanswer\" \"some event string that is also a prompt\"")
+    answer = args[0]
+    event = args[1:]
+    event_string = " ".join(event)
+    result = run(["osascript", "-e",
+    """set answer to ""
+    try
+    tell app "SystemUIServer"
+    set answer to text returned of (display dialog "%s" default answer "%s")
+    end
+    end
+    activate app (path to frontmost application as text)
+    answer
+    """ % (event_string, answer)])
+    result = result.strip()
+    if result > "":
+        event[-1] += result
+        now_command(event)
