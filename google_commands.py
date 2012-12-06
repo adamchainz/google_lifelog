@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from config import config
 from utils import *
 
+GOOGLE_LOCATION = '/usr/local/bin/google'
+
 # From date.py in google
 ACCEPTED_DAY_TIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
@@ -51,7 +53,7 @@ def now_command(args):
 
     no_length = "%s,%s" % (now, now)
     print format_tags(event)
-    print run(['google', 'calendar', 'add', '-d', no_length, event], with_stderr=True)
+    print run([GOOGLE_LOCATION, 'calendar', 'add', '-d', no_length, event], with_stderr=True)
 
 
 def for_command(args):
@@ -65,7 +67,7 @@ def for_command(args):
     length = "%s,%s" % (now, later)
     event = " ".join(args[1:])
     print format_tags(event)
-    print run(['google', 'calendar', 'add', '-d', length, event], with_stderr=True)
+    print run([GOOGLE_LOCATION, 'calendar', 'add', '-d', length, event], with_stderr=True)
 
 
 def quick_command(args):
@@ -74,17 +76,17 @@ def quick_command(args):
     else:
         event = " ".join(args)
         print format_tags(event)
-        print run(['google', 'calendar', 'add', event], with_stderr=True)
+        print run([GOOGLE_LOCATION, 'calendar', 'add', event], with_stderr=True)
 
 
 def today_command(args):
-    print google_cal_format(run(['google', 'calendar', 'today']))
+    print google_cal_format(run([GOOGLE_LOCATION, 'calendar', 'today']))
 
 
 def yesterday_command(args):
     minus_24 = datetime.now() - timedelta(hours=24)
     yesterday = datetime.strftime(minus_24, '%Y-%m-%d')
-    print google_cal_format(run(['google', 'calendar', 'list', '-d', yesterday]))
+    print google_cal_format(run([GOOGLE_LOCATION, 'calendar', 'list', '-d', yesterday]))
 
 
 def download_command(args):
