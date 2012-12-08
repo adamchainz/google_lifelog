@@ -120,17 +120,9 @@ def popup_command(args):
     answer = args[0]
     event = args[1:]
     event_string = " ".join(event)
-    result = run(["osascript", "-e",
-    """set answer to ""
-    try
-    tell app "SystemUIServer"
-    set answer to text returned of (display dialog "%s" default answer "%s")
-    end
-    end
-    activate app (path to frontmost application as text)
-    answer
-    """ % (event_string, answer)])
+    result = run(["CocoaDialog", "standard-inputbox", "--informative-text", event_string, "--text", answer])
     result = result.strip()
-    if result > "":
-        event[-1] += result
+    button, answer = result.split("\n")
+    if button == '1' and answer > "":
+        event[-1] += answer
         now_command(event)
