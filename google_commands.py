@@ -117,10 +117,11 @@ def download_command(args):
 def popup_command(args):
     if len(args) < 2:
         print fail("Usage : l popup \"defaultanswer\" \"some event string that is also a prompt\"")
+    COCOA_DIALOG = "/Applications/CocoaDialog.app/Contents/MacOS/CocoaDialog"
     answer = args[0]
     event = args[1:]
     event_string = " ".join(event)
-    result = run(["CocoaDialog", "standard-inputbox", "--informative-text", event_string, "--text", answer])
+    result = run([COCOA_DIALOG, "standard-inputbox", "--informative-text", event_string, "--text", answer])
     result = result.strip()
     button, answer = result.split("\n")
     if button == '1' and answer > "":
