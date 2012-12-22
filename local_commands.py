@@ -19,13 +19,12 @@ def get_events(filter_re=None):
 
     # Search
     event_list = []
-    for ting in cal.walk():
-        if ting.name == "VEVENT":
-            if filter_re is None or \
-                re.search(filter_re,
-                          ting.get('summary').lower(),
-                          flags=re.IGNORECASE):
-                event_list.append(ting)
+    for ting in cal.walk("VEVENT"):
+        if filter_re is None or \
+            re.search(filter_re,
+                      ting.get('summary').lower(),
+                      flags=re.IGNORECASE):
+            event_list.append(ting)
     return event_list
 
 
