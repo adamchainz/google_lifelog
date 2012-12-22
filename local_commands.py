@@ -128,10 +128,10 @@ def bucket_command(args):
 
     for ev in events:
         if time_len == 'weeks':
-            day = ev.get('dtstart').dt.date()
+            day = ev.get('dtstart').dt
             key = day - relativedelta(weekday=MO)
         elif time_len == 'days':
-            key = ev.get('dtstart').dt.date() - relativedelta(days=0)
+            key = ev.get('dtstart').dt - relativedelta(days=0)
 
         if sum_var == 'num':
             val = 1
@@ -153,6 +153,10 @@ def bucket_command(args):
         gap = timedelta(days=7)
     else:
         gap = timedelta(days=1)
+
+    if len(sum_dict) == 0:
+        print "No events"
+        return
 
     last = sorted(sum_dict)[-1]
     i = sorted(sum_dict)[0]
