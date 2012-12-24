@@ -1,61 +1,15 @@
 # coding=utf-8
 import re
 from collections import defaultdict
-from datetime import datetime, date, time, timedelta
-from icalendar import Calendar  # , vDate
-from config import config
-from utils import *
+from datetime import timedelta
 from dateutil import zoneinfo
 from dateutil.relativedelta import *
 
-# http://icalendar.readthedocs.org/en/latest/examples.html
+from utils import *
+from local_calendar import get_events
+
 
 DEFAULT_TZINFO = zoneinfo.gettz("Europe/London")
-
-
-def get_events(filter_re=None):
-    filename = config.get('Local', 'ical_filename')
-    cal = Calendar.from_ical(open(filename, 'rb').read())
-
-    # Search
-    event_list = []
-    for ting in cal.walk("VEVENT"):
-        if filter_re is None or \
-            re.search(filter_re,
-                      ting.get('summary').lower(),
-                      flags=re.IGNORECASE):
-            event_list.append(ting)
-    return event_list
-
-
-def sort_events(event_list, ascending=True):
-    def event_cmp(x, y):
-        x_t = x.get('dtstart').dt
-        if type(x_t) == date:
-            x_t = datetime.combine(x_t, time(0, tzinfo=DEFAULT_TZINFO))
-        y_t = y.get('dtstart').dt
-        if type(y_t) == date:
-            y_t = datetime.combine(y_t, time(0, tzinfo=DEFAULT_TZINFO))
-
-        if x_t.tzinfo is None:
-            x_t = datetime.replace(x_t, tzinfo=DEFAULT_TZINFO)
-
-        if y_t.tzinfo is None:
-            y_t = datetime.replace(y_t, tzinfo=DEFAULT_TZINFO)
-
-        c = cmp(x_t, y_t)
-        if not ascending:
-            c *= -1
-        return c
-
-    return sorted(event_list, event_cmp)
-
-
-def format_event(event):
-    start = event.get('dtstart').dt.strftime('%b %d %H:%M')
-    end = event.get('dtend').dt.strftime('%b %d %H:%M')
-    summary = format_tags(event.get('summary'))
-    return okblue("%s - %s" % (start, end)) + "\t" + summary
 
 
 def list_command(args):
@@ -65,8 +19,8 @@ def list_command(args):
 
     filter_re = " ".join(args)
 
-    for ev in sort_events(get_events(filter_re)):
-        say(format_event(ev) + "\n")
+    for ev in get_events(filter_re):
+        say(ev.output() + "\n")
 
 
 def sum_time_command(args):
@@ -77,8 +31,8 @@ def sum_time_command(args):
     filter_re = " ".join(args)
 
     time_sum = timedelta(0)
-    for ev in sort_events(get_events(filter_re)):
-        time_sum += (ev.get('dtend').dt - ev.get('dtstart').dt)
+    for ev in get_events(filter_re):
+        time_sum += (ev.dtend - ev.dtstart)
     print time_sum
 
 
@@ -87,11 +41,11 @@ def hash_tags_command(args):
         print fail("No args.")
         return
 
-    events = get_events("")
+    events = get_events()
     tags = defaultdict(int)
 
     for ev in events:
-        hash_tags = re.findall('\#\w+', ev.get('summary'))
+        hash_tags = re.findall('\#\w+', ev.summary)
         for tag in hash_tags:
             tags[tag] += 1
 
@@ -113,37 +67,46 @@ def bucket_command(args):
 
     filter_re = " ".join(args[2:])
 
-    events = sort_events(get_events(filter_re))
+    events = get_events(filter_re)
 
     if sum_var == 'num':
         sum_dict = defaultdict(int)
+        default = 0
     elif sum_var == 'time':
         sum_dict = defaultdict(timedelta)
+        default = timedelta(hours=0)
+    elif sum_var == 'minutes':
+        sum_dict = defaultdict(int)
+        default = 0
     elif sum_var == 'mg':
         sum_re = re.compile('\\b(\\d+)mg\\b', flags=re.IGNORECASE)
         sum_dict = defaultdict(int)
+        default = 0
     else:
         sum_re = re.compile('\\b%s=(\\d+)\\b' % sum_var, flags=re.IGNORECASE)
         sum_dict = defaultdict(int)
+        default = 0
 
     for ev in events:
         if time_len == 'weeks':
-            day = ev.get('dtstart').dt
-            key = day - relativedelta(weekday=MO)
+            key = ev.dtstart.date() - relativedelta(weekday=MO)
         elif time_len == 'days':
-            key = ev.get('dtstart').dt - relativedelta(days=0)
+            key = ev.dtstart.date() - relativedelta(days=0)
 
         if sum_var == 'num':
             val = 1
         elif sum_var == 'time':
-            val = ev.get('dtend').dt - ev.get('dtstart').dt
+            val = ev.dtend - ev.dtstart
+        elif sum_var == 'minutes':
+            val = ev.dtend - ev.dtstart
+            val = val.seconds / 60
         else:
             # var fallback
-            match = sum_re.search(str(ev.get('summary')))
+            match = sum_re.search(str(ev.summary))
             try:
                 val = int(match.group(1))
             except AttributeError:
-                print fail(format_event(ev) + " has no %s" % sum_var)
+                print fail(ev.output() + " has no %s" % sum_var)
                 val = 0
 
         sum_dict[key] += val
@@ -161,7 +124,7 @@ def bucket_command(args):
     last = sorted(sum_dict)[-1]
     i = sorted(sum_dict)[0]
     while True:
-        val = sum_dict.get(i, "")
+        val = sum_dict.get(i, default)
         print "%s\t%s" % (okblue(str(i)), val)
         i += gap
         if i > last:
