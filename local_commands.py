@@ -33,7 +33,7 @@ def sum_time_command(args):
     time_sum = timedelta(0)
     for ev in get_events(filter_re):
         time_sum += (ev.dtend - ev.dtstart)
-    print time_sum
+    print time_sum, "= {:0.2f} hours".format(time_sum.total_seconds() / 3600)
 
 
 def hash_tags_command(args):
