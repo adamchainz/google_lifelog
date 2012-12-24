@@ -20,7 +20,7 @@ def list_command(args):
     filter_re = " ".join(args)
 
     for ev in get_events(filter_re):
-        say(ev.output() + "\n")
+        print ev
 
 
 def sum_time_command(args):
@@ -103,7 +103,7 @@ def bucket_command(args):
             try:
                 val = int(match.group(1))
             except AttributeError:
-                print fail(ev.output() + " has no %s" % sum_var)
+                print fail(ev + " has no %s" % sum_var)
                 val = 0
 
         sum_dict[key] += val

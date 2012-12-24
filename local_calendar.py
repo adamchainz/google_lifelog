@@ -40,7 +40,7 @@ class Evently(object):
     def __le__(self, other):
         return self.dtstart <= other.dtstart
 
-    def output(self):
+    def __str__(self):
         start = self.dtstart.strftime('%b %d %H:%M')
         end = self.dtend.strftime('%b %d %H:%M')
         summary = format_tags(self.summary)
