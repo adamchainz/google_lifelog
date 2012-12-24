@@ -70,22 +70,19 @@ def bucket_command(args):
     events = get_events(filter_re)
 
     if sum_var == 'num':
-        sum_dict = defaultdict(int)
         default = 0
     elif sum_var == 'time':
-        sum_dict = defaultdict(timedelta)
         default = timedelta(hours=0)
     elif sum_var == 'minutes':
-        sum_dict = defaultdict(int)
         default = 0
     elif sum_var == 'mg':
         sum_re = re.compile('\\b(\\d+)mg\\b', flags=re.IGNORECASE)
-        sum_dict = defaultdict(int)
         default = 0
     else:
         sum_re = re.compile('\\b%s=(\\d+)\\b' % sum_var, flags=re.IGNORECASE)
-        sum_dict = defaultdict(int)
         default = 0
+
+    sum_dict = defaultdict(type(default))
 
     for ev in events:
         if time_len == 'weeks':
