@@ -91,7 +91,7 @@ class EventlyList(list):
             total = 0
 
         if sum_var == 'mg':
-            sum_re = '\\b(\\d+)mg\\b'
+            sum_re = '([0-9.]+)mg\\b'
         elif sum_var not in ('num', 'time', 'minutes'):
             sum_re = '\\b%s=(\\d+)\\b' % sum_var
 
@@ -107,7 +107,7 @@ class EventlyList(list):
                 # var fallback
                 match = re.search(sum_re, ev.summary)
                 try:
-                    val = int(match.group(1))
+                    val = float(match.group(1))
                 except AttributeError:
                     print fail("%s has no %s" % (ev, sum_var))
                     val = 0
