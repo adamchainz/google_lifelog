@@ -69,42 +69,11 @@ def bucket_command(args):
 
     events = get_events(filter_re)
 
+    if len(events) == 0:
+        print fail("No events")
+        return
+
     bucketed = events.bucket(time_len)
-
-    if sum_var == 'num':
-        default = 0
-    elif sum_var == 'time':
-        default = timedelta(hours=0)
-    elif sum_var == 'minutes':
-        default = 0
-    elif sum_var == 'mg':
-        sum_re = re.compile('\\b(\\d+)mg\\b', flags=re.IGNORECASE)
-        default = 0
-    else:
-        sum_re = re.compile('\\b%s=(\\d+)\\b' % sum_var, flags=re.IGNORECASE)
-        default = 0
-
-    sum_dict = defaultdict(type(default))
-
-    for bucket in bucketed:
-        for ev in bucketed[bucket]:
-            if sum_var == 'num':
-                val = 1
-            elif sum_var == 'time':
-                val = ev.dtend - ev.dtstart
-            elif sum_var == 'minutes':
-                val = ev.dtend - ev.dtstart
-                val = val.seconds / 60
-            else:
-                # var fallback
-                match = sum_re.search(str(ev.summary))
-                try:
-                    val = int(match.group(1))
-                except AttributeError:
-                    print fail(ev + " has no %s" % sum_var)
-                    val = 0
-
-            sum_dict[bucket] += val
 
     # output
     if time_len == 'weeks':
@@ -112,14 +81,10 @@ def bucket_command(args):
     else:
         gap = timedelta(days=1)
 
-    if len(sum_dict) == 0:
-        print "No events"
-        return
-
-    last = sorted(sum_dict)[-1]
-    i = sorted(sum_dict)[0]
+    last = sorted(bucketed)[-1]
+    i = sorted(bucketed)[0]
     while True:
-        val = sum_dict.get(i, default)
+        val = bucketed[i].get_sum_var(sum_var)
         print "%s\t%s" % (okblue(str(i)), val)
         i += gap
         if i > last:

@@ -83,3 +83,35 @@ class EventlyList(list):
             bucketed[key].append(ev)
 
         return bucketed
+
+    def get_sum_var(self, sum_var):
+        if sum_var == 'time':
+            total = timedelta(hours=0)
+        else:
+            total = 0
+
+        if sum_var == 'mg':
+            sum_re = '\\b(\\d+)mg\\b'
+        elif sum_var not in ('num', 'time', 'minutes'):
+            sum_re = '\\b%s=(\\d+)\\b' % sum_var
+
+        for ev in self:
+            if sum_var == 'num':
+                val = 1
+            elif sum_var == 'time':
+                val = ev.dtend - ev.dtstart
+            elif sum_var == 'minutes':
+                val = ev.dtend - ev.dtstart
+                val = val.seconds / 60
+            else:
+                # var fallback
+                match = re.search(sum_re, ev.summary)
+                try:
+                    val = int(match.group(1))
+                except AttributeError:
+                    print fail(ev + " has no %s" % sum_var)
+                    val = 0
+
+            total += val
+
+        return total
