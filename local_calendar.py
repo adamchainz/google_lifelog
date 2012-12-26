@@ -56,15 +56,19 @@ class Evently(object):
 
 class EventlyList(list):
 
-    def filter(self, filter_re):
+    def filter(self, filter_re, inverse=False):
         filtered_list = EventlyList()
         for ev in self:
-            if re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
+            matches = bool(re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE))
+            if matches != inverse:
                 filtered_list.append(ev)
 
         filtered_list.sort()
 
         return filtered_list
+
+    def exclude(self, filter_re):
+        return self.filter(filter_re, inverse=True)
 
     def bucket(self, bucket_type, offset=None):
         if not bucket_type in ['days', 'weeks']:
