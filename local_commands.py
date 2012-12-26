@@ -1,7 +1,8 @@
 # coding=utf-8
+import scipy
 import re
-from collections import Counter
-from datetime import timedelta
+from collections import Counter, defaultdict
+from datetime import date, timedelta
 from dateutil import zoneinfo
 from dateutil.relativedelta import *
 
@@ -102,13 +103,22 @@ def sleep_analysis_command(args):
     melatonins = all_events.filter("#drugs\\b").filter("melatonin")
     melatonins = melatonins.bucket('days', offset=offset)
 
-    min_bucket = min(min(sleeps.keys()), min(melatonins.keys()))
     max_bucket = max(max(sleeps.keys()), max(melatonins.keys()))
 
+    start_date = date(2012, 9, 12)
+    melatonin_pops = defaultdict(list)
+
+    i = start_date
     gap = timedelta(days=1)
-    i = min_bucket
     while i <= max_bucket:
-        print "%s\t%s\t%s" % \
-            (okblue(str(i)), melatonins[i].get_sum_var('mg'), sleeps[i].get_sum_var('minutes'))
+        mel_mg = melatonins[i].get_sum_var('mg')
+        sleep_minutes = sleeps[i].get_sum_var('minutes')
+        melatonin_pops[mel_mg].append(sleep_minutes)
         i += gap
+
+    print header("melatonin mg\tmins asleep mean\tmins asleep std dev\tn")
+    for x in melatonin_pops:
+        pop = melatonin_pops[x]
+        print "%s\t%0.0f\t%0.0f\t%s" % \
+            (x, scipy.mean(pop), scipy.std(pop), len(pop))
 
