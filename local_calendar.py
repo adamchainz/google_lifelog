@@ -54,23 +54,6 @@ class Evently(object):
         return out
 
 
-def get_events(filter_re=None):
-    filename = config.get('Local', 'ical_filename')
-    cal = Calendar.from_ical(open(filename, 'rb').read())
-
-    # Search
-    event_list = EventlyList()
-    for ting in cal.walk("VEVENT"):
-        ev = Evently(ting)
-        if filter_re is None or \
-           re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
-            event_list.append(ev)
-
-    event_list.sort()
-
-    return event_list
-
-
 class EventlyList(list):
 
     def bucket(self, bucket_type):
@@ -118,3 +101,20 @@ class EventlyList(list):
             total += val
 
         return total
+
+
+def get_events(filter_re=None):
+    filename = config.get('Local', 'ical_filename')
+    cal = Calendar.from_ical(open(filename, 'rb').read())
+
+    # Search
+    event_list = EventlyList()
+    for ting in cal.walk("VEVENT"):
+        ev = Evently(ting)
+        if filter_re is None or \
+           re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
+            event_list.append(ev)
+
+    event_list.sort()
+
+    return event_list
