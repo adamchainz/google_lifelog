@@ -1,10 +1,13 @@
 # coding=utf-8
 import re
-from functools import total_ordering
+from collections import defaultdict
 from datetime import datetime, date, time
 from dateutil import zoneinfo
-from config import config
+from dateutil.relativedelta import relativedelta
+from functools import total_ordering
 from icalendar import Calendar  # , vDate
+
+from config import config
 
 from utils import *
 
@@ -56,10 +59,27 @@ def get_events(filter_re=None):
     cal = Calendar.from_ical(open(filename, 'rb').read())
 
     # Search
-    event_list = []
+    event_list = EventlyList()
     for ting in cal.walk("VEVENT"):
         ev = Evently(ting)
         if filter_re is None or \
            re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
             event_list.append(ev)
-    return sorted(event_list)
+    return event_list
+
+
+class EventlyList(list):
+
+    def bucket(self, bucket_type):
+        if not bucket_type in ['days', 'weeks']:
+            raise ValueError("bucket_type must be days or weeks")
+
+        bucketed = defaultdict(EventlyList)
+        for ev in self:
+            if bucket_type == 'weeks':
+                key = ev.dtstart.date() - relativedelta(weekday=MO)
+            elif bucket_type == 'days':
+                key = ev.dtstart.date() - relativedelta(days=0)
+            bucketed[key].append(ev)
+
+        return bucketed

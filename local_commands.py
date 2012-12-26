@@ -69,6 +69,8 @@ def bucket_command(args):
 
     events = get_events(filter_re)
 
+    bucketed = events.bucket(time_len)
+
     if sum_var == 'num':
         default = 0
     elif sum_var == 'time':
@@ -84,29 +86,25 @@ def bucket_command(args):
 
     sum_dict = defaultdict(type(default))
 
-    for ev in events:
-        if time_len == 'weeks':
-            key = ev.dtstart.date() - relativedelta(weekday=MO)
-        elif time_len == 'days':
-            key = ev.dtstart.date() - relativedelta(days=0)
+    for bucket in bucketed:
+        for ev in bucketed[bucket]:
+            if sum_var == 'num':
+                val = 1
+            elif sum_var == 'time':
+                val = ev.dtend - ev.dtstart
+            elif sum_var == 'minutes':
+                val = ev.dtend - ev.dtstart
+                val = val.seconds / 60
+            else:
+                # var fallback
+                match = sum_re.search(str(ev.summary))
+                try:
+                    val = int(match.group(1))
+                except AttributeError:
+                    print fail(ev + " has no %s" % sum_var)
+                    val = 0
 
-        if sum_var == 'num':
-            val = 1
-        elif sum_var == 'time':
-            val = ev.dtend - ev.dtstart
-        elif sum_var == 'minutes':
-            val = ev.dtend - ev.dtstart
-            val = val.seconds / 60
-        else:
-            # var fallback
-            match = sum_re.search(str(ev.summary))
-            try:
-                val = int(match.group(1))
-            except AttributeError:
-                print fail(ev + " has no %s" % sum_var)
-                val = 0
-
-        sum_dict[key] += val
+            sum_dict[bucket] += val
 
     # output
     if time_len == 'weeks':
