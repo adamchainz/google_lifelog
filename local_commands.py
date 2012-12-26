@@ -1,6 +1,6 @@
 # coding=utf-8
 import re
-from collections import defaultdict
+from collections import Counter
 from datetime import timedelta
 from dateutil import zoneinfo
 from dateutil.relativedelta import *
@@ -42,18 +42,14 @@ def hash_tags_command(args):
         return
 
     events = get_events()
-    tags = defaultdict(int)
+    tags = Counter()
 
     for ev in events:
         hash_tags = re.findall('\#\w+', ev.summary)
-        for tag in hash_tags:
-            tags[tag] += 1
+        tags.update(hash_tags)
 
-    tags = [(tag, tags[tag]) for tag in tags]
-    tags = sorted(tags, key=lambda x:-x[1])
-
-    for tag in tags:
-        print format_tags("%s\t%i" % (tag[0], tag[1]))
+    for (tag, count) in sorted(tags.items(), key=lambda x:-x[1]):
+        print format_tags("%s\t%i" % (tag, count))
 
 
 def bucket_command(args):
@@ -89,3 +85,30 @@ def bucket_command(args):
         i += gap
         if i > last:
             break
+
+
+def sleep_analysis_command(args):
+    if len(args):
+        print fail("no args")
+        return
+
+    all_events = get_events()
+
+    # + 2 hours to push into the next day
+    offset = timedelta(hours=2)
+    sleeps = all_events.filter("#sleep\\b")
+    sleeps = sleeps.bucket('days', offset=offset)
+
+    melatonins = all_events.filter("#drugs\\b").filter("melatonin")
+    melatonins = melatonins.bucket('days', offset=offset)
+
+    min_bucket = min(min(sleeps.keys()), min(melatonins.keys()))
+    max_bucket = max(max(sleeps.keys()), max(melatonins.keys()))
+
+    gap = timedelta(days=1)
+    i = min_bucket
+    while i <= max_bucket:
+        print "%s\t%s\t%s" % \
+            (okblue(str(i)), melatonins[i].get_sum_var('mg'), sleeps[i].get_sum_var('minutes'))
+        i += gap
+
