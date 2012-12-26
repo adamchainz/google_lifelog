@@ -65,6 +65,9 @@ def get_events(filter_re=None):
         if filter_re is None or \
            re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
             event_list.append(ev)
+
+    event_list.sort()
+
     return event_list
 
 
