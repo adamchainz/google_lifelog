@@ -1,7 +1,7 @@
 # coding=utf-8
 import re
 from collections import defaultdict
-from datetime import datetime, date, time
+from datetime import datetime, date, time, timedelta
 from dateutil import zoneinfo
 from dateutil.relativedelta import relativedelta
 from functools import total_ordering
@@ -56,16 +56,30 @@ class Evently(object):
 
 class EventlyList(list):
 
-    def bucket(self, bucket_type):
+    def filter(self, filter_re):
+        filtered_list = EventlyList()
+        for ev in self:
+            if re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
+                filtered_list.append(ev)
+
+        filtered_list.sort()
+
+        return filtered_list
+
+    def bucket(self, bucket_type, offset=None):
         if not bucket_type in ['days', 'weeks']:
             raise ValueError("bucket_type must be days or weeks")
 
         bucketed = defaultdict(EventlyList)
         for ev in self:
+            start = ev.dtstart
+            if offset:
+                start += offset
+
             if bucket_type == 'weeks':
-                key = ev.dtstart.date() - relativedelta(weekday=MO)
+                key = start.date() - relativedelta(weekday=MO)
             elif bucket_type == 'days':
-                key = ev.dtstart.date() - relativedelta(days=0)
+                key = start.date() - relativedelta(days=0)
             bucketed[key].append(ev)
 
         return bucketed
@@ -95,7 +109,7 @@ class EventlyList(list):
                 try:
                     val = int(match.group(1))
                 except AttributeError:
-                    print fail(ev + " has no %s" % sum_var)
+                    print fail("%s has no %s" % (ev, sum_var))
                     val = 0
 
             total += val
@@ -110,10 +124,10 @@ def get_events(filter_re=None):
     # Search
     event_list = EventlyList()
     for ting in cal.walk("VEVENT"):
-        ev = Evently(ting)
-        if filter_re is None or \
-           re.search(filter_re, ev.summary.lower(), flags=re.IGNORECASE):
-            event_list.append(ev)
+        event_list.append(Evently(ting))
+
+    if filter_re:
+        event_list = event_list.filter(filter_re)
 
     event_list.sort()
 
