@@ -13,6 +13,10 @@ from local_calendar import get_events
 DEFAULT_TZINFO = zoneinfo.gettz("Europe/London")
 
 
+def num_events_command(args):
+    print len(get_events())
+
+
 def list_command(args):
     if len(args) == 0:
         print fail("1 arg : a filter_re")
