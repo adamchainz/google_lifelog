@@ -3,7 +3,7 @@ import re
 from collections import defaultdict
 from datetime import datetime, date, time, timedelta
 from dateutil import zoneinfo
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta, MO
 from functools import total_ordering
 from icalendar import Calendar  # , vDate
 
