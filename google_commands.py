@@ -74,6 +74,11 @@ def quick_command(args):
     if len(args) == 0:
         print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
     else:
+        # Double up single-time events to be 0-length
+        if re.match('\d\d:\d\d', args[0]):
+            args[0] = '{0}-{0}'.format(args[0])
+
+        # Run google sub-command
         event = " ".join(args)
         print format_tags(event)
         print run([GOOGLE_LOCATION, 'calendar', 'add', event], with_stderr=True)
