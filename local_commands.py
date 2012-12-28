@@ -77,10 +77,12 @@ def bucket_command(args):
     bucketed = events.bucket(time_len)
 
     # output
-    if time_len == 'weeks':
-        gap = timedelta(days=7)
+    if time_len == 'months':
+        gap = relativedelta(months=1)
+    elif time_len == 'weeks':
+        gap = relativedelta(weeks=1)
     else:
-        gap = timedelta(days=1)
+        gap = relativedelta(days=1)
 
     last = sorted(bucketed)[-1]
     i = sorted(bucketed)[0]

@@ -71,8 +71,8 @@ class EventlyList(list):
         return self.filter(filter_re, inverse=True)
 
     def bucket(self, bucket_type, offset=None):
-        if not bucket_type in ['days', 'weeks']:
-            raise ValueError("bucket_type must be days or weeks")
+        if not bucket_type in ('months', 'days', 'weeks'):
+            raise ValueError("bucket_type must be months, weeks, or days")
 
         bucketed = defaultdict(EventlyList)
         for ev in self:
@@ -80,10 +80,13 @@ class EventlyList(list):
             if offset:
                 start += offset
 
-            if bucket_type == 'weeks':
+            if bucket_type == 'months':
+                key = start.date() - relativedelta(day=1)
+            elif bucket_type == 'weeks':
                 key = start.date() - relativedelta(weekday=MO)
             elif bucket_type == 'days':
                 key = start.date() - relativedelta(days=0)
+
             bucketed[key].append(ev)
 
         return bucketed
