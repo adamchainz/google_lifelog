@@ -71,11 +71,9 @@ class EventlyList(list):
         return self.filter(filter_re, inverse=True)
 
     def bucket(self, bucket_type, offset=None):
-        if not bucket_type in ('months', 'days', 'weeks'):
-            raise ValueError("bucket_type must be months, weeks, or days")
-
         bucketed = defaultdict(EventlyList)
         for ev in self:
+            # Optionally add in offset
             start = ev.dtstart
             if offset:
                 start += offset
@@ -86,28 +84,39 @@ class EventlyList(list):
                 key = start.date() - relativedelta(weekday=MO)
             elif bucket_type == 'days':
                 key = start.date() - relativedelta(days=0)
+            elif bucket_type == 'weekdays':
+                key = start.strftime('%A')
+            else:
+                raise ValueError("Unexpected bucket_type.")
 
             bucketed[key].append(ev)
 
         return bucketed
 
     def get_sum_var(self, sum_var):
-        if sum_var == 'time':
-            total = timedelta(hours=0)
+        var_list = self.get_var_list(sum_var)
+        if len(var_list):
+            return sum(var_list)
         else:
-            total = 0
+            if sum_var == 'time':
+                return timedelta(hours=0)
+            else:
+                return 0
 
-        if sum_var == 'mg':
+    def get_var_list(self, var):
+        var_list = []
+
+        if var == 'mg':
             sum_re = '([0-9.]+)mg\\b'
-        elif sum_var not in ('num', 'time', 'minutes'):
-            sum_re = '\\b%s=(\\d+)\\b' % sum_var
+        elif var not in ('num', 'time', 'minutes'):
+            sum_re = '\\b%s=(\\d+)\\b' % var
 
         for ev in self:
-            if sum_var == 'num':
+            if var == 'num':
                 val = 1
-            elif sum_var == 'time':
+            elif var == 'time':
                 val = ev.dtend - ev.dtstart
-            elif sum_var == 'minutes':
+            elif var == 'minutes':
                 val = ev.dtend - ev.dtstart
                 val = val.seconds / 60
             else:
@@ -116,12 +125,12 @@ class EventlyList(list):
                 try:
                     val = float(match.group(1))
                 except AttributeError:
-                    print fail("%s has no %s" % (ev, sum_var))
+                    print fail("%s has no %s" % (ev, var))
                     val = 0
 
-            total += val
+            var_list.append(val)
 
-        return total
+        return var_list
 
 
 def get_events(filter_re=None):
