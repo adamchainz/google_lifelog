@@ -75,7 +75,7 @@ def quick_command(args):
         print fail("Usage: quick \"tomorrow 7pm Pub with Andy\""), "- adds with google's quick-add syntax"
     else:
         # Double up single-time events to be 0-length
-        if re.match('\d\d:\d\d', args[0]):
+        if re.match('\d\d:\d\d', args[0]) and len(args[0]) == 5:
             args[0] = '{0}-{0}'.format(args[0])
 
         # Run google sub-command
