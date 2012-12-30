@@ -128,3 +128,34 @@ def sleep_analysis_command(args):
         print "%s\t%0.0f\t%0.0f\t%s" % \
             (x, scipy.mean(pop), scipy.std(pop), len(pop))
 
+
+def alcohol_analysis_command(args):
+    if len(args):
+        print fail("no args")
+        return
+
+    alcohols = get_events(r'#alcohol\b')
+    bucketed = alcohols.bucket('days', offset=timedelta(hours=-4))
+
+    weekday_bucket = defaultdict(list)
+
+    for day in bucketed:
+        weekday = day.strftime('%A')
+        units_this_day = bucketed[day].get_sum_var('units')
+        weekday_bucket[weekday].append(units_this_day)
+
+    print header("Day\tUnits mean\tUnits std dev\tTotal")
+    for day in ('Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'):
+        pop = weekday_bucket[day]
+        print "{0}\t{1:0.0f}\t{2:0.2f}\t{3:0.1f}". format(day, scipy.mean(pop), scipy.std(pop), sum(pop))
+
+
+def maybe_bad_alcohols_command(args):
+    if len(args):
+        print fail("no args")
+        return
+
+    alcohols = get_events(r'\b(vodka|gin|beer|wine|G&T)\b')
+    for ev in alcohols:
+        if not re.search(r'units=', ev.summary):
+            print ev
