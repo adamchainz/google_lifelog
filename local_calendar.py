@@ -81,7 +81,10 @@ class EventlyList(list):
             if bucket_type == 'months':
                 key = start.date() - relativedelta(day=1)
             elif bucket_type == 'weeks':
-                key = start.date() - relativedelta(weekday=MO)
+                # weeks=-1 means "last" monday rather than next.
+                # adding and subtracting a weekday relativedeltas are the same
+                # operation.
+                key = start.date() + relativedelta(weekday=MO, weeks=-1)
             elif bucket_type == 'days':
                 key = start.date() - relativedelta(days=0)
             elif bucket_type == 'weekdays':
