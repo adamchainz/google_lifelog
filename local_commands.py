@@ -168,7 +168,7 @@ def maybe_bad_alcohols_command(args):
         print fail("no args")
         return
 
-    alcohols = get_events(r'\b(vodka|gin|beer|wine|G&T)\b')
+    alcohols = get_events(r'\b(vodka|gin|beer|wine|G&T|champagne)\b')
     for ev in alcohols:
         if not re.search(r'units=', ev.summary):
             print ev
