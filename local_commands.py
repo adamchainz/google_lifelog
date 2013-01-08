@@ -99,34 +99,44 @@ def sleep_analysis_command(args):
         print fail("no args")
         return
 
+    from collections import namedtuple
+
     all_events = get_events()
 
-    # + 2 hours to push into the next day
-    offset = timedelta(hours=2)
+    # -26 hours to pull back into today
     sleeps = all_events.filter("#sleep\\b")
-    sleeps = sleeps.bucket('days', offset=offset)
+    sleeps = sleeps.bucket('days', offset=timedelta(hours=-26))
 
-    melatonins = all_events.filter("#drugs\\b").filter("melatonin")
-    melatonins = melatonins.bucket('days', offset=offset)
+    drugs = all_events.filter(r"#drugs\b")
 
-    max_bucket = max(max(sleeps.keys()), max(melatonins.keys()))
+    melatonins = drugs.filter("melatonin")
+    melatonins = melatonins.bucket('days', offset=timedelta(hours=-2))
+
+    alcohols = drugs.filter(r"#alcohol\b")
+    alcohols = alcohols.bucket('days', offset=timedelta(hours=-6))
+
+    SleepRow = namedtuple('SleepRow', ('date', 'sleep_mins', 'mel_mg', 'alcohol_units'))
+
+    days = []
 
     start_date = date(2012, 9, 12)
-    melatonin_pops = defaultdict(list)
+    end_date = date.today() - timedelta(days=1)  # any sleep minutes from today are for yesterday
 
     i = start_date
-    gap = timedelta(days=1)
-    while i <= max_bucket:
-        mel_mg = melatonins[i].get_sum_var('mg')
-        sleep_minutes = sleeps[i].get_sum_var('minutes')
-        melatonin_pops[mel_mg].append(sleep_minutes)
-        i += gap
+    while i <= end_date:
+        day = SleepRow(
+                date=i,
+                mel_mg=melatonins[i].get_sum_var('mg'),
+                sleep_mins=sleeps[i].get_sum_var('minutes'),
+                alcohol_units=alcohols[i].get_sum_var('units')
+            )
+        days.append(day)
 
-    print header("melatonin mg\tmins asleep mean\tmins asleep std dev\tn")
-    for x in melatonin_pops:
-        pop = melatonin_pops[x]
-        print "%s\t%0.0f\t%0.0f\t%s" % \
-            (x, scipy.mean(pop), scipy.std(pop), len(pop))
+        i += timedelta(days=1)
+
+    print header("date\tmins asleep\tmelatonin mg\talcohol units")
+    for day in days:
+        print "\t".join([str(x) for x in day])
 
 
 def alcohol_analysis_command(args):
