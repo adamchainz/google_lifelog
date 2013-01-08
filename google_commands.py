@@ -132,3 +132,7 @@ def popup_command(args):
     if button == '1' and answer > "":
         event[-1] += answer
         now_command(event)
+
+
+def sleepiness_popup_command(args):
+    popup_command(["0-7", "Rating #sleepiness="])
