@@ -130,7 +130,10 @@ def sleep_analysis_command(args):
                 sleep_mins=sleeps[i].get_sum_var('minutes'),
                 alcohol_units=alcohols[i].get_sum_var('units')
             )
-        days.append(day)
+
+        # Ignore days where night time sleep was not recorded
+        if day.sleep_mins > 60:
+            days.append(day)
 
         i += timedelta(days=1)
 
