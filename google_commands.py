@@ -136,3 +136,7 @@ def popup_command(args):
 
 def sleepiness_popup_command(args):
     popup_command(["0-7", "Rating #sleepiness="])
+
+
+def pf_popup_command(args):
+    popup_command(["0-5", "#pf right="])
