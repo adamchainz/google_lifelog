@@ -98,13 +98,11 @@ class EventlyList(list):
 
     def get_sum_var(self, sum_var):
         var_list = self.get_var_list(sum_var)
-        if len(var_list):
-            return sum(var_list)
+        if sum_var == 'time':
+            default = timedelta(hours=0)
         else:
-            if sum_var == 'time':
-                return timedelta(hours=0)
-            else:
-                return 0
+            default = 0
+        return sum(var_list, default)
 
     def get_var_list(self, var):
         var_list = []
