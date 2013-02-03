@@ -53,6 +53,9 @@ class Evently(object):
             out += '\n\t' + warning(self.description.replace('\n','\n\t'))
         return out
 
+    def __repr__(self):
+        return str(self)
+
 
 class EventlyList(list):
 

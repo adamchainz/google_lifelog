@@ -1,7 +1,7 @@
 # coding=utf-8
 import scipy
 import re
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, OrderedDict
 from datetime import date, timedelta
 from dateutil import zoneinfo
 from dateutil.relativedelta import *
@@ -99,47 +99,67 @@ def sleep_analysis_command(args):
         print fail("no args")
         return
 
-    from collections import namedtuple
-
     all_events = get_events()
 
-    # -26 hours to pull back into today
-    sleeps = all_events.filter("#sleep\\b")
-    sleeps = sleeps.bucket('days', offset=timedelta(hours=-26))
+    # -20 hours to pull back all of tomorrow's sleep into today
+    all_sleeps = all_events.filter("#sleep\\b")
 
-    drugs = all_events.filter(r"#drugs\b")
+    sleeps = all_sleeps.bucket('days', offset=timedelta(hours=-20))
 
-    melatonins = drugs.filter("melatonin")
-    melatonins = melatonins.bucket('days', offset=timedelta(hours=-2))
+    naps = all_sleeps.filter(r'^nap\b') \
+                 .bucket('days', offset=timedelta(hours=-20))
 
-    alcohols = drugs.filter(r"#alcohol\b")
-    alcohols = alcohols.bucket('days', offset=timedelta(hours=-6))
+    all_drugs = all_events.filter(r"#drugs\b")
 
-    SleepRow = namedtuple('SleepRow', ('date', 'sleep_mins', 'mel_mg', 'alcohol_units'))
+    melatonins = all_drugs.filter("melatonin") \
+                          .bucket('days', offset=timedelta(hours=-2))
 
-    days = []
+    alcohols = all_drugs.filter(r"#alcohol\b") \
+                        .bucket('days', offset=timedelta(hours=-6))
+
+    caffeines = all_drugs.filter(r'#caffeine\b') \
+                         .bucket('days')
+
+    fast_days = all_events.filter(r'^fast day\b') \
+                          .bucket('days')
+
+    # Summarize
 
     start_date = date(2012, 9, 12)
-    end_date = date.today() - timedelta(days=1)  # any sleep minutes from today are for yesterday
+    end_date = date.today() - timedelta(days=1)  # Up to yesterday
+    days = []
 
-    i = start_date
-    while i <= end_date:
-        day = SleepRow(
-                date=i,
-                mel_mg=melatonins[i].get_sum_var('mg'),
-                sleep_mins=sleeps[i].get_sum_var('minutes'),
-                alcohol_units=alcohols[i].get_sum_var('units')
-            )
+    the_date = start_date
+    while the_date <= end_date:
+        sleep_mins = sleeps[the_date].get_sum_var('minutes')
+        nap_mins = naps[the_date].get_sum_var('minutes')
 
+        is_fast_day = (the_date in fast_days)
+        alone = not (len(sleeps[the_date].filter('with')) > 0)
+
+        # Store
         # Ignore days where night time sleep was not recorded
-        if day.sleep_mins > 60:
+        if sleep_mins > 60:
+            day = OrderedDict()
+            day['Date'] = the_date
+            day['Minutes Sleeping'] = sleep_mins
+            day['Minutes Napping'] = nap_mins
+            day['Minutes Normal Sleep'] = sleep_mins - nap_mins
+            day['Alone?'] = 'Yes' if alone else 'No'
+            day['Fasting?'] = 'Yes' if is_fast_day else 'No'
+            day['Melatonin mg'] = melatonins[the_date].get_sum_var('mg')
+            day['Units of Alcohol'] = alcohols[the_date].get_sum_var('units')
+            day['Caffeine mg'] = caffeines[the_date].get_sum_var('mg')
             days.append(day)
 
-        i += timedelta(days=1)
+        the_date += timedelta(days=1)
 
-    print header("date\tmins asleep\tmelatonin mg\talcohol units")
+    # Output
+
+    header_keys = days[0].keys()
+    print header('\t'.join(header_keys))
     for day in days:
-        print "\t".join([str(x) for x in day])
+        print "\t".join([str(day[x]) for x in day])
 
 
 def alcohol_analysis_command(args):
