@@ -192,3 +192,30 @@ def maybe_bad_alcohols_command(args):
     for ev in alcohols:
         if not re.search(r'units=', ev.summary):
             print ev
+
+
+def inhaler_analysis_command(args):
+    if len(args):
+        print fail("no args!")
+        return
+
+    inhalers = get_events('^inhaler').bucket('weeks')
+
+    start_date = date(2012, 6, 25)  # when logs looked sane
+    end_date = date.today() - timedelta(days=1)  # up to yesterday
+    end_date += relativedelta(weekday=MO, weeks=-1)
+    weeks = []
+
+    the_date = start_date
+    while the_date <= end_date:
+        week = OrderedDict()
+        week['Monday'] = the_date
+        week['Num Inhalers'] = inhalers[the_date].get_sum_var('num')
+        week['Num Inhalers w/o exercise'] = inhalers[the_date].exclude('exercise').get_sum_var('num')
+        weeks.append(week)
+        the_date += timedelta(days=7)
+
+    header_keys = weeks[0].keys()
+    print header('\t'.join(header_keys))
+    for week in weeks:
+        print "\t".join([str(week[x]) for x in week])
