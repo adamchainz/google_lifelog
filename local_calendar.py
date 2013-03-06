@@ -1,5 +1,6 @@
 # coding=utf-8
 import re
+from unidecode import unidecode
 from collections import defaultdict
 from datetime import datetime, date, time, timedelta
 from dateutil import zoneinfo
@@ -44,13 +45,19 @@ class Evently(object):
     def __le__(self, other):
         return self.dtstart <= other.dtstart
 
+    def __unicode__(self):
+        return str(self)
+
     def __str__(self):
         start = self.dtstart.strftime('%b %d %H:%M')
         end = self.dtend.strftime('%b %d %H:%M')
         summary = format_tags(self.summary)
-        out = okblue("%s - %s" % (start, end)) + "\t" + summary
+        out = "{} - {}".format(start, end)
+        out = okblue(out) + "\t" + unidecode(summary)
         if self.description > '':
-            out += '\n\t' + warning(self.description.replace('\n','\n\t'))
+            desc = self.description.replace('\n','\n\t')
+            desc = unidecode(desc)
+            out += '\n\t' + warning(desc)
         return out
 
     def __repr__(self):
