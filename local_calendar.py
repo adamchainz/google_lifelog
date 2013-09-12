@@ -119,6 +119,8 @@ class EventlyList(list):
 
         if var == 'mg':
             sum_re = '([0-9.]+)mg\\b'
+        elif var == 'kg':
+            sum_re = '([0-9.]+)kg\\b'
         elif var not in ('num', 'time', 'minutes'):
             sum_re = '\\b%s=(\\d+)\\b' % var
 
