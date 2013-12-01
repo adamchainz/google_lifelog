@@ -1,7 +1,4 @@
-Google Lifelog
-==============
+Repo Dead
+=========
 
-A tool for:
-
-1. Adding events on google calendar easily.
-2. Downloading and analyzing events from an ical file easily.
+Re-implementation is over at: https://github.com/adamchainz/lifelogger - check it out! Now using Google Calendar API directly!
